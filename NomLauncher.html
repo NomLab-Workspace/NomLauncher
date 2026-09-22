@@ -1,0 +1,1641 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NomLauncher</title>
+  <!-- Favicon: NomLab アイコン -->
+  <link rel="icon" type="image/jpeg" href="NomLab_ico.jpg">
+
+  <style>
+    :root {
+      --bg-base: #0f172a;
+      --bg-surface: #1e293b;
+      --bg-elevated: #334155;
+      --accent-primary: #3b82f6;
+      --accent-hover: #60a5fa;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --border-color: #334155;
+      --danger: #ef4444;
+      --radius: 12px;
+      --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      background-color: var(--bg-base);
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow-x: hidden;
+    }
+
+    header {
+      padding: 0.85rem 1.75rem;
+      background-color: var(--bg-surface);
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 1rem;
+      z-index: 10;
+    }
+
+    .brand {
+      font-size: 1.25rem;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      display: flex;
+      align-items: center;
+      gap: 0.65rem;
+      color: var(--text-main);
+      user-select: none;
+      cursor: pointer;
+    }
+
+    .brand-logo-img {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      object-fit: cover;
+      background-color: #ffffff;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+      border: 1px solid rgba(59, 130, 246, 0.4);
+    }
+
+    .brand-icon-fallback {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-weight: 800;
+      font-size: 0.9rem;
+    }
+
+    .header-controls {
+      display: flex;
+      gap: 0.75rem;
+      align-items: center;
+      flex-grow: 1;
+      max-width: 800px;
+      justify-content: flex-end;
+    }
+
+    .view-toggle {
+      display: flex;
+      background-color: var(--bg-base);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      overflow: hidden;
+      padding: 2px;
+    }
+
+    .view-toggle-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      padding: 0.5rem 0.85rem;
+      font-size: 0.85rem;
+      cursor: pointer;
+      border-radius: 6px;
+      transition: var(--transition);
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+      white-space: nowrap;
+    }
+
+    .view-toggle-btn.active {
+      background-color: var(--accent-primary);
+      color: #fff;
+      font-weight: 600;
+    }
+
+    .search-box {
+      position: relative;
+      flex-grow: 1;
+      max-width: 260px;
+    }
+
+    .search-input {
+      width: 100%;
+      background-color: var(--bg-base);
+      border: 1px solid var(--border-color);
+      padding: 0.55rem 0.9rem;
+      border-radius: 8px;
+      color: var(--text-main);
+      font-size: 0.85rem;
+      outline: none;
+      transition: var(--transition);
+    }
+
+    .search-input:focus {
+      border-color: var(--accent-primary);
+      box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+    }
+
+    .btn {
+      background-color: var(--accent-primary);
+      color: #fff;
+      border: none;
+      padding: 0.55rem 0.95rem;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      transition: var(--transition);
+      white-space: nowrap;
+    }
+
+    .btn:hover {
+      background-color: var(--accent-hover);
+    }
+
+    .btn-secondary {
+      background-color: var(--bg-elevated);
+      color: var(--text-main);
+    }
+
+    .btn-secondary:hover {
+      background-color: #475569;
+    }
+
+    .tag-filter-bar {
+      padding: 0.65rem 1.75rem;
+      background-color: rgba(30, 41, 59, 0.5);
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      overflow-x: auto;
+    }
+
+    .tag-chip {
+      background-color: var(--bg-surface);
+      border: 1px solid var(--border-color);
+      color: var(--text-muted);
+      padding: 0.25rem 0.7rem;
+      border-radius: 100px;
+      font-size: 0.8rem;
+      cursor: pointer;
+      user-select: none;
+      transition: var(--transition);
+      white-space: nowrap;
+    }
+
+    .tag-chip:hover {
+      border-color: var(--accent-primary);
+      color: var(--text-main);
+    }
+
+    .tag-chip.active {
+      background-color: var(--accent-primary);
+      border-color: var(--accent-primary);
+      color: #fff;
+    }
+
+    .filter-notice {
+      font-size: 0.75rem;
+      color: #f59e0b;
+      margin-left: auto;
+      white-space: nowrap;
+      display: none;
+    }
+
+    main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      padding: 1.5rem;
+      position: relative;
+    }
+
+    /* === カルーセル表示 === */
+    .carousel-wrapper {
+      position: relative;
+      width: 100%;
+      max-width: 900px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .carousel-viewport {
+      width: 100%;
+      overflow: hidden;
+      padding: 1.5rem 0;
+    }
+
+    .carousel-track {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+      position: relative;
+      min-height: 480px;
+    }
+
+    .card {
+      width: 460px;
+      max-width: 85vw;
+      height: 450px;
+      background-color: var(--bg-surface);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius);
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .carousel-track .card {
+      position: absolute;
+      transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1), opacity 0.4s ease, filter 0.4s ease;
+    }
+
+    .carousel-track .card.active {
+      transform: translateX(0) scale(1);
+      opacity: 1;
+      z-index: 5;
+      filter: drop-shadow(0 0 20px rgba(59, 130, 246, 0.25));
+    }
+
+    .carousel-track .card.prev {
+      transform: translateX(-65%) scale(0.85);
+      opacity: 0.35;
+      z-index: 2;
+      filter: blur(1px);
+    }
+
+    .carousel-track .card.next {
+      transform: translateX(65%) scale(0.85);
+      opacity: 0.35;
+      z-index: 2;
+      filter: blur(1px);
+    }
+
+    .carousel-track .card.hidden {
+      transform: scale(0.5);
+      opacity: 0;
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    .card-preview {
+      width: 100%;
+      height: 220px;
+      background-color: var(--bg-elevated);
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .card-preview img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .placeholder-art {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 3.5rem;
+      font-weight: 800;
+      color: rgba(255, 255, 255, 0.8);
+      background: linear-gradient(135deg, #1e3a8a, #0284c7);
+      text-transform: uppercase;
+      letter-spacing: 2px;
+    }
+
+    .order-tag {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      background-color: rgba(15, 23, 42, 0.75);
+      backdrop-filter: blur(4px);
+      padding: 0.15rem 0.5rem;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: #fff;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+    }
+
+    .card-content {
+      padding: 1.15rem;
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+      justify-content: space-between;
+    }
+
+    .card-title {
+      font-size: 1.15rem;
+      font-weight: 700;
+      margin-bottom: 0.3rem;
+      color: var(--text-main);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .card-description {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      line-height: 1.4;
+      margin-bottom: 0.6rem;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .card-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.35rem;
+      margin-bottom: 0.6rem;
+    }
+
+    .badge {
+      font-size: 0.7rem;
+      background-color: var(--bg-elevated);
+      color: var(--accent-hover);
+      padding: 0.15rem 0.45rem;
+      border-radius: 4px;
+    }
+
+    .card-actions {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-top: 1px solid var(--border-color);
+      padding-top: 0.65rem;
+    }
+
+    .url-hint {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      max-width: 170px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .btn-icon-group {
+      display: flex;
+      gap: 0.35rem;
+    }
+
+    .btn-icon {
+      background: transparent;
+      border: 1px solid var(--border-color);
+      color: var(--text-muted);
+      width: 30px;
+      height: 30px;
+      border-radius: 6px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: var(--transition);
+      font-size: 0.85rem;
+    }
+
+    .btn-icon:hover {
+      border-color: var(--accent-primary);
+      color: var(--text-main);
+      background-color: var(--bg-elevated);
+    }
+
+    .btn-icon.danger:hover {
+      border-color: var(--danger);
+      color: var(--danger);
+    }
+
+    .nav-arrow {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      background-color: rgba(30, 41, 59, 0.8);
+      border: 1px solid var(--border-color);
+      color: var(--text-main);
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.15rem;
+      z-index: 10;
+      backdrop-filter: blur(8px);
+      transition: var(--transition);
+    }
+
+    .nav-arrow:hover {
+      background-color: var(--accent-primary);
+      border-color: var(--accent-primary);
+    }
+
+    .nav-prev { left: 0.5rem; }
+    .nav-next { right: 0.5rem; }
+
+    .carousel-indicators {
+      display: flex;
+      gap: 0.45rem;
+      margin-top: 0.75rem;
+      align-items: center;
+      justify-content: center;
+      flex-wrap: wrap;
+      max-width: 80vw;
+    }
+
+    .indicator-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background-color: var(--bg-elevated);
+      cursor: pointer;
+      transition: var(--transition);
+    }
+
+    .indicator-dot.active {
+      width: 22px;
+      border-radius: 4px;
+      background-color: var(--accent-primary);
+    }
+
+    /* === 一覧（グリッド/DnD）表示 === */
+    .grid-view-container {
+      display: none;
+      width: 100%;
+      max-width: 1200px;
+    }
+
+    .grid-dnd-track {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 1.25rem;
+      width: 100%;
+      padding: 1rem 0;
+    }
+
+    .grid-dnd-track .card {
+      width: 100%;
+      height: 380px;
+      cursor: grab;
+      position: relative;
+      transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .grid-dnd-track .card:active {
+      cursor: grabbing;
+    }
+
+    .grid-dnd-track .card.dragging {
+      opacity: 0.4;
+      transform: scale(0.96);
+      border: 2px dashed var(--accent-primary);
+    }
+
+    .grid-dnd-track .card.drag-over {
+      border: 2px solid var(--accent-hover);
+      box-shadow: 0 0 16px rgba(59, 130, 246, 0.4);
+      transform: translateY(-4px);
+    }
+
+    .drag-handle {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background-color: rgba(15, 23, 42, 0.75);
+      backdrop-filter: blur(4px);
+      padding: 0.2rem 0.45rem;
+      border-radius: 4px;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      cursor: grab;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+    }
+
+    /* === サイト登録・編集画面 === */
+    .register-view-container {
+      display: none;
+      width: 100%;
+      max-width: 980px;
+      margin: 0.5rem auto 1.5rem;
+      background-color: var(--bg-surface);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius);
+      padding: 1.75rem 2rem;
+      box-shadow: 0 15px 30px -5px rgba(0, 0, 0, 0.4);
+    }
+
+    .register-layout {
+      display: grid;
+      grid-template-columns: 1fr 340px;
+      gap: 2rem;
+      align-items: start;
+    }
+
+    @media (max-width: 860px) {
+      .register-layout {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .register-header {
+      margin-bottom: 1.5rem;
+      border-bottom: 1px solid var(--border-color);
+      padding-bottom: 0.85rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .register-title-group {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .register-title {
+      font-size: 1.25rem;
+      font-weight: 700;
+    }
+
+    .form-group {
+      margin-bottom: 1.25rem;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      margin-bottom: 0.4rem;
+      font-weight: 500;
+    }
+
+    .form-control {
+      width: 100%;
+      background-color: var(--bg-base);
+      border: 1px solid var(--border-color);
+      padding: 0.65rem 0.85rem;
+      border-radius: 6px;
+      color: var(--text-main);
+      font-size: 0.9rem;
+      outline: none;
+      transition: var(--transition);
+    }
+
+    .form-control:focus {
+      border-color: var(--accent-primary);
+    }
+
+    textarea.form-control {
+      resize: vertical;
+      min-height: 70px;
+    }
+
+    .file-input-wrapper {
+      display: flex;
+      gap: 0.5rem;
+      align-items: center;
+    }
+
+    .file-input-wrapper input[type="file"] {
+      display: none;
+    }
+
+    .preview-panel {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .preview-panel-title {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      font-weight: 600;
+      align-self: flex-start;
+    }
+
+    .empty-state {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 0.75rem;
+      color: var(--text-muted);
+      height: 350px;
+    }
+
+    /* === フッター === */
+    footer {
+      background-color: var(--bg-surface);
+      border-top: 1px solid var(--border-color);
+      padding: 1rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin-top: auto;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+    }
+
+    .footer-left {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+    }
+
+    .footer-logo {
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      object-fit: cover;
+      background-color: #ffffff;
+      border: 1px solid rgba(59, 130, 246, 0.4);
+    }
+
+    .footer-copyright {
+      letter-spacing: 0.3px;
+    }
+
+    .footer-right {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <!-- プロダクトアイコン & ロゴ -->
+    <div class="brand" id="brandLogo" title="カルーセル表示へ">
+      <img src="NomLab_ico.jpg" alt="NomLab" class="brand-logo-img" onerror="this.style.display='none'; document.getElementById('brandFallback').style.display='flex';">
+      <div id="brandFallback" class="brand-icon-fallback" style="display: none;">NL</div>
+      <span>NomLauncher</span>
+    </div>
+
+    <div class="header-controls">
+      <div class="view-toggle">
+        <button class="view-toggle-btn active" id="viewCarouselBtn" title="カルーセル表示">
+          🎠 カルーセル
+        </button>
+        <button class="view-toggle-btn" id="viewGridBtn" title="一覧・並び替え">
+          ⊞ 一覧 (並替)
+        </button>
+        <button class="view-toggle-btn" id="viewRegisterBtn" title="サイト登録画面">
+          ＋ サイト登録
+        </button>
+      </div>
+
+      <div class="search-box" id="searchBoxWrapper">
+        <input type="text" id="searchInput" class="search-input" placeholder="検索... (Escでクリア)">
+      </div>
+
+      <button class="btn btn-secondary" id="exportBtn" title="JSON形式でエクスポート">保存</button>
+      <button class="btn btn-secondary" id="importBtn" title="JSONファイルからインポート">復元</button>
+      <input type="file" id="importFileInput" accept=".json" style="display: none;">
+    </div>
+  </header>
+
+  <div class="tag-filter-bar" id="tagFilterBar">
+    <div class="tag-chip active" data-tag="ALL">すべて</div>
+    <span class="filter-notice" id="filterNotice">※並び替えは「すべて」選択時のみ有効です</span>
+  </div>
+
+  <main>
+    <!-- ① カルーセル画面 -->
+    <div class="carousel-wrapper" id="carouselWrapper">
+      <button class="nav-arrow nav-prev" id="prevBtn" title="前へ (←キー)">&#10094;</button>
+      
+      <div class="carousel-viewport">
+        <div class="carousel-track" id="carouselTrack"></div>
+      </div>
+
+      <button class="nav-arrow nav-next" id="nextBtn" title="次へ (→キー)">&#10095;</button>
+    </div>
+
+    <div class="carousel-indicators" id="carouselIndicators"></div>
+
+    <!-- ② 一覧（グリッド/DnD）画面 -->
+    <div class="grid-view-container" id="gridViewContainer">
+      <div class="grid-dnd-track" id="gridDndTrack"></div>
+    </div>
+
+    <!-- ③ サイト登録・編集 専用画面 -->
+    <div class="register-view-container" id="registerViewContainer">
+      <div class="register-header">
+        <div class="register-title-group">
+          <!-- 未編集のまま前の画面に戻るボタン -->
+          <button type="button" class="btn btn-secondary" id="headerBackBtn" title="未編集のまま前の画面へ戻る">
+            ← 戻る
+          </button>
+          <h2 class="register-title" id="formHeaderTitle">新規サイト登録</h2>
+        </div>
+        <button type="button" class="btn btn-secondary" id="cancelEditBtn" style="display: none;">新規作成に戻る</button>
+      </div>
+
+      <div class="register-layout">
+        <!-- フォーム -->
+        <form id="itemForm">
+          <input type="hidden" id="editId">
+          
+          <div class="form-group">
+            <label for="siteName">サイト名 *</label>
+            <input type="text" id="siteName" class="form-control" required placeholder="例: GitHub">
+          </div>
+
+          <div class="form-group">
+            <label for="siteUrl">URL *</label>
+            <input type="url" id="siteUrl" class="form-control" required placeholder="https://github.com">
+          </div>
+
+          <div class="form-group">
+            <label for="siteTags">カテゴリタグ (カンマ区切り)</label>
+            <input type="text" id="siteTags" class="form-control" placeholder="開発, インフラ, ドキュメント">
+          </div>
+
+          <div class="form-group">
+            <label for="siteDesc">サイトの内容・メモ</label>
+            <textarea id="siteDesc" class="form-control" placeholder="利用用途、アカウント、メモなど"></textarea>
+          </div>
+
+          <div class="form-group">
+            <label>サイトイメージ（画像ファイルまたはWeb画像URL）</label>
+            <div class="file-input-wrapper">
+              <input type="text" id="siteImage" class="form-control" placeholder="https://... またはローカル画像を選択">
+              <label class="btn btn-secondary" style="margin: 0; cursor: pointer;">
+                選択
+                <input type="file" id="imageFileInput" accept="image/*">
+              </label>
+              <button type="button" class="btn btn-secondary" id="clearImgBtn" style="padding: 0.55rem 0.75rem;">解除</button>
+            </div>
+            <small style="color: var(--text-muted); font-size: 0.75rem; margin-top: 4px; display: block;">
+              ※未設定時はサイト名の頭文字からカバー画像が自動生成されます。
+            </small>
+          </div>
+
+          <div style="display: flex; gap: 0.75rem; margin-top: 1.5rem;">
+            <button type="button" class="btn btn-secondary" id="bottomBackBtn" style="padding: 0.75rem 1.25rem;">
+              戻る (キャンセル)
+            </button>
+            <button type="submit" class="btn" id="saveSubmitBtn" style="flex: 1; justify-content: center; padding: 0.75rem;">
+              IndexedDBに保存する
+            </button>
+          </div>
+        </form>
+
+        <!-- リアルタイム・プレビュー -->
+        <div class="preview-panel">
+          <div class="preview-panel-title">📱 カルーセル表示プレビュー</div>
+          <div class="card" id="livePreviewCard" style="width: 100%; height: 390px; cursor: default;">
+            <div class="card-preview" id="livePreviewCover" style="height: 170px;">
+              <div class="placeholder-art" id="livePlaceholderArt">W</div>
+              <img id="livePreviewImg" src="" alt="" style="display: none;">
+            </div>
+            <div class="card-content">
+              <div>
+                <div class="card-title" id="livePreviewTitle">サイト名</div>
+                <p class="card-description" id="livePreviewDesc">説明がここに表示されます。</p>
+                <div class="card-tags" id="livePreviewTags">
+                  <span class="badge">タグ</span>
+                </div>
+              </div>
+              <div class="card-actions">
+                <span class="url-hint" id="livePreviewUrl">https://...</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="empty-state" id="emptyState">
+      <p style="font-size: 1.1rem; font-weight: 500;">表示するサイトがありません</p>
+      <p style="font-size: 0.85rem;">上部の「＋ サイト登録」タブから追加するか、検索条件をクリアしてください。</p>
+    </div>
+  </main>
+
+  <!-- フッター: NomLab コピーライト -->
+  <footer>
+    <div class="footer-left">
+      <img src="NomLab_ico.jpg" alt="NomLab" class="footer-logo" onerror="this.style.display='none'">
+      <span class="footer-copyright">&copy; 2026 NomLab - App Development Studio. All rights reserved.</span>
+    </div>
+    <div class="footer-right">
+      <span>Stand-alone Browser App</span>
+    </div>
+  </footer>
+
+  <script>
+    /**
+     * IndexedDB サービス層
+     */
+    const DB_NAME = "NomLauncherDB";
+    const DB_VERSION = 1;
+    const STORE_NAME = "sites";
+
+    const dbService = {
+      db: null,
+
+      async open() {
+        if (this.db) return this.db;
+        return new Promise((resolve, reject) => {
+          const request = indexedDB.open(DB_NAME, DB_VERSION);
+
+          request.onupgradeneeded = (event) => {
+            const db = event.target.result;
+            if (!db.objectStoreNames.contains(STORE_NAME)) {
+              db.createObjectStore(STORE_NAME, { keyPath: "id" });
+            }
+          };
+
+          request.onsuccess = (event) => {
+            this.db = event.target.result;
+            resolve(this.db);
+          };
+
+          request.onerror = (event) => reject(event.target.error);
+        });
+      },
+
+      async getAll() {
+        const db = await this.open();
+        return new Promise((resolve, reject) => {
+          const transaction = db.transaction([STORE_NAME], "readonly");
+          const store = transaction.objectStore(STORE_NAME);
+          const request = store.getAll();
+
+          request.onsuccess = () => resolve(request.result || []);
+          request.onerror = () => reject(request.error);
+        });
+      },
+
+      async put(item) {
+        const db = await this.open();
+        return new Promise((resolve, reject) => {
+          const transaction = db.transaction([STORE_NAME], "readwrite");
+          const store = transaction.objectStore(STORE_NAME);
+          const request = store.put(item);
+
+          request.onsuccess = () => resolve(request.result);
+          request.onerror = () => reject(request.error);
+        });
+      },
+
+      async delete(id) {
+        const db = await this.open();
+        return new Promise((resolve, reject) => {
+          const transaction = db.transaction([STORE_NAME], "readwrite");
+          const store = transaction.objectStore(STORE_NAME);
+          const request = store.delete(id);
+
+          request.onsuccess = () => resolve();
+          request.onerror = () => reject(request.error);
+        });
+      },
+
+      async clear() {
+        const db = await this.open();
+        return new Promise((resolve, reject) => {
+          const transaction = db.transaction([STORE_NAME], "readwrite");
+          const store = transaction.objectStore(STORE_NAME);
+          const request = store.clear();
+
+          request.onsuccess = () => resolve();
+          request.onerror = () => reject(request.error);
+        });
+      },
+
+      async bulkPut(items) {
+        const db = await this.open();
+        return new Promise((resolve, reject) => {
+          const transaction = db.transaction([STORE_NAME], "readwrite");
+          const store = transaction.objectStore(STORE_NAME);
+
+          transaction.oncomplete = () => resolve();
+          transaction.onerror = () => reject(transaction.error);
+
+          items.forEach(item => store.put(item));
+        });
+      }
+    };
+
+    // 初期サンプルデータ
+    const INITIAL_SITES = [
+      {
+        id: "site-1",
+        name: "GitHub",
+        url: "https://github.com",
+        tags: ["開発", "インフラ", "リポジトリ"],
+        desc: "コードホスティング、プルリクエストの確認、OSS管理。",
+        image: "",
+        order: 0,
+        createdAt: 1
+      },
+      {
+        id: "site-2",
+        name: "AWS Management Console",
+        url: "https://console.aws.amazon.com",
+        tags: ["クラウド", "インフラ"],
+        desc: "EC2, S3, IAMなどのクラウドインフラ基盤の運用と監視。",
+        image: "",
+        order: 1,
+        createdAt: 2
+      },
+      {
+        id: "site-3",
+        name: "Qiita",
+        url: "https://qiita.com",
+        tags: ["情報収集", "技術記事"],
+        desc: "エンジニア向けTips、アーキテクチャ設計情報のキャッチアップ。",
+        image: "",
+        order: 2,
+        createdAt: 3
+      }
+    ];
+
+    // アプリケーション状態
+    let sites = [];
+    let filteredSites = [];
+    let currentIndex = 0;
+    let selectedTag = "ALL";
+    let searchQuery = "";
+    let currentView = "carousel"; // "carousel" | "grid" | "register"
+    let previousView = "carousel";
+    let draggedIndex = null;
+
+    // DOM参照
+    const brandLogo = document.getElementById("brandLogo");
+    const carouselWrapper = document.getElementById("carouselWrapper");
+    const carouselTrack = document.getElementById("carouselTrack");
+    const carouselIndicators = document.getElementById("carouselIndicators");
+    const gridViewContainer = document.getElementById("gridViewContainer");
+    const gridDndTrack = document.getElementById("gridDndTrack");
+    const registerViewContainer = document.getElementById("registerViewContainer");
+    const emptyState = document.getElementById("emptyState");
+
+    const prevBtn = document.getElementById("prevBtn");
+    const nextBtn = document.getElementById("nextBtn");
+    const searchInput = document.getElementById("searchInput");
+    const searchBoxWrapper = document.getElementById("searchBoxWrapper");
+    const tagFilterBar = document.getElementById("tagFilterBar");
+    const filterNotice = document.getElementById("filterNotice");
+
+    const viewCarouselBtn = document.getElementById("viewCarouselBtn");
+    const viewGridBtn = document.getElementById("viewGridBtn");
+    const viewRegisterBtn = document.getElementById("viewRegisterBtn");
+
+    const headerBackBtn = document.getElementById("headerBackBtn");
+    const bottomBackBtn = document.getElementById("bottomBackBtn");
+
+    const itemForm = document.getElementById("itemForm");
+    const formHeaderTitle = document.getElementById("formHeaderTitle");
+    const cancelEditBtn = document.getElementById("cancelEditBtn");
+    const editIdInput = document.getElementById("editId");
+    const siteNameInput = document.getElementById("siteName");
+    const siteUrlInput = document.getElementById("siteUrl");
+    const siteTagsInput = document.getElementById("siteTags");
+    const siteDescInput = document.getElementById("siteDesc");
+    const siteImageInput = document.getElementById("siteImage");
+    const imageFileInput = document.getElementById("imageFileInput");
+    const clearImgBtn = document.getElementById("clearImgBtn");
+
+    // プレビューDOM
+    const livePreviewTitle = document.getElementById("livePreviewTitle");
+    const livePreviewDesc = document.getElementById("livePreviewDesc");
+    const livePreviewTags = document.getElementById("livePreviewTags");
+    const livePreviewUrl = document.getElementById("livePreviewUrl");
+    const livePreviewImg = document.getElementById("livePreviewImg");
+    const livePlaceholderArt = document.getElementById("livePlaceholderArt");
+
+    const exportBtn = document.getElementById("exportBtn");
+    const importBtn = document.getElementById("importBtn");
+    const importFileInput = document.getElementById("importFileInput");
+
+    // 初期化
+    async function init() {
+      try {
+        await dbService.open();
+        const stored = await dbService.getAll();
+
+        if (stored && stored.length > 0) {
+          let needUpdate = false;
+          stored.forEach((item, idx) => {
+            if (typeof item.order !== "number") {
+              item.order = idx;
+              needUpdate = true;
+            }
+          });
+          stored.sort((a, b) => a.order - b.order);
+          if (needUpdate) {
+            await dbService.bulkPut(stored);
+          }
+          sites = stored;
+        } else {
+          await dbService.bulkPut(INITIAL_SITES);
+          sites = [...INITIAL_SITES];
+        }
+      } catch (err) {
+        console.error("IndexedDB Load Error:", err);
+        sites = [...INITIAL_SITES];
+      }
+
+      setupEventListeners();
+      renderTagFilters();
+      applyFilters();
+      updateLivePreview();
+    }
+
+    function escapeHtml(str) {
+      if (!str) return "";
+      return String(str).replace(/[&<>'"]/g, 
+        tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag)
+      );
+    }
+
+    function renderTagFilters() {
+      const tagSet = new Set();
+      sites.forEach(s => {
+        if (Array.isArray(s.tags)) {
+          s.tags.forEach(t => {
+            if (t.trim()) tagSet.add(t.trim());
+          });
+        }
+      });
+
+      tagFilterBar.innerHTML = `<div class="tag-chip ${selectedTag === 'ALL' ? 'active' : ''}" data-tag="ALL">すべて</div>`;
+      tagSet.forEach(tag => {
+        const chip = document.createElement("div");
+        chip.className = `tag-chip ${selectedTag === tag ? 'active' : ''}`;
+        chip.dataset.tag = tag;
+        chip.textContent = tag;
+        tagFilterBar.appendChild(chip);
+      });
+
+      tagFilterBar.appendChild(filterNotice);
+    }
+
+    function applyFilters() {
+      const q = searchQuery.toLowerCase().trim();
+      const isFiltered = (selectedTag !== "ALL") || (q !== "");
+      filterNotice.style.display = (isFiltered && currentView === "grid") ? "inline" : "none";
+
+      filteredSites = sites.filter(item => {
+        const matchesTag = (selectedTag === "ALL") || (item.tags && item.tags.includes(selectedTag));
+        if (!matchesTag) return false;
+
+        if (!q) return true;
+        const inName = item.name ? item.name.toLowerCase().includes(q) : false;
+        const inUrl = item.url ? item.url.toLowerCase().includes(q) : false;
+        const inDesc = item.desc ? item.desc.toLowerCase().includes(q) : false;
+        const inTags = item.tags ? item.tags.some(t => t.toLowerCase().includes(q)) : false;
+
+        return inName || inUrl || inDesc || inTags;
+      });
+
+      if (currentIndex >= filteredSites.length) {
+        currentIndex = Math.max(0, filteredSites.length - 1);
+      }
+
+      renderView();
+    }
+
+    function switchView(viewName, rememberPrevious = true) {
+      if (rememberPrevious && currentView !== "register") {
+        previousView = currentView;
+      }
+      currentView = viewName;
+
+      viewCarouselBtn.classList.toggle("active", viewName === "carousel");
+      viewGridBtn.classList.toggle("active", viewName === "grid");
+      viewRegisterBtn.classList.toggle("active", viewName === "register");
+
+      if (viewName === "register") {
+        tagFilterBar.style.display = "none";
+        searchBoxWrapper.style.visibility = "hidden";
+      } else {
+        tagFilterBar.style.display = "flex";
+        searchBoxWrapper.style.visibility = "visible";
+      }
+
+      renderView();
+    }
+
+    function renderView() {
+      carouselWrapper.style.display = "none";
+      carouselIndicators.style.display = "none";
+      gridViewContainer.style.display = "none";
+      registerViewContainer.style.display = "none";
+      emptyState.style.display = "none";
+
+      if (currentView === "register") {
+        registerViewContainer.style.display = "block";
+        return;
+      }
+
+      if (filteredSites.length === 0) {
+        emptyState.style.display = "flex";
+        return;
+      }
+
+      if (currentView === "carousel") {
+        carouselWrapper.style.display = "flex";
+        carouselIndicators.style.display = "flex";
+        renderCarousel();
+      } else if (currentView === "grid") {
+        gridViewContainer.style.display = "block";
+        renderGrid();
+      }
+    }
+
+    // カルーセル描画
+    function renderCarousel() {
+      carouselTrack.innerHTML = "";
+      carouselIndicators.innerHTML = "";
+
+      filteredSites.forEach((site, index) => {
+        const card = document.createElement("div");
+        card.className = "card";
+        card.dataset.index = index;
+
+        if (index === currentIndex) {
+          card.classList.add("active");
+        } else if (index === (currentIndex - 1 + filteredSites.length) % filteredSites.length && filteredSites.length > 1) {
+          card.classList.add("prev");
+        } else if (index === (currentIndex + 1) % filteredSites.length && filteredSites.length > 1) {
+          card.classList.add("next");
+        } else {
+          card.classList.add("hidden");
+        }
+
+        let previewHtml = site.image 
+          ? `<img src="${site.image}" alt="${escapeHtml(site.name)}" loading="lazy">` 
+          : `<div class="placeholder-art">${escapeHtml(site.name ? site.name.trim().charAt(0) : "W")}</div>`;
+
+        const tagsHtml = (site.tags || []).map(t => `<span class="badge">${escapeHtml(t)}</span>`).join("");
+
+        const canMoveLeft = index > 0;
+        const canMoveRight = index < filteredSites.length - 1;
+
+        card.innerHTML = `
+          <div class="card-preview">
+            <span class="order-tag">#${site.order + 1}</span>
+            ${previewHtml}
+          </div>
+          <div class="card-content">
+            <div>
+              <div class="card-title" title="${escapeHtml(site.name)}">${escapeHtml(site.name)}</div>
+              <p class="card-description">${escapeHtml(site.desc || "説明はありません。")}</p>
+              <div class="card-tags">${tagsHtml}</div>
+            </div>
+            <div class="card-actions">
+              <span class="url-hint" title="${escapeHtml(site.url)}">${escapeHtml(site.url)}</span>
+              <div class="btn-icon-group" onclick="event.stopPropagation()">
+                <button class="btn-icon" onclick="moveSiteOrder(${site.order}, -1)" title="前へ移動" ${canMoveLeft ? '' : 'disabled style="opacity:0.3;cursor:not-allowed;"'}>◀</button>
+                <button class="btn-icon" onclick="moveSiteOrder(${site.order}, 1)" title="次へ移動" ${canMoveRight ? '' : 'disabled style="opacity:0.3;cursor:not-allowed;"'}>▶</button>
+                <button class="btn-icon" onclick="startEditSite('${site.id}')" title="編集">&#9998;</button>
+                <button class="btn-icon danger" onclick="deleteSite('${site.id}')" title="削除">&#128465;</button>
+              </div>
+            </div>
+          </div>
+        `;
+
+        card.addEventListener("click", () => {
+          if (index === currentIndex) {
+            window.open(site.url, "_blank", "noopener,noreferrer");
+          } else {
+            currentIndex = index;
+            renderCarousel();
+          }
+        });
+
+        carouselTrack.appendChild(card);
+
+        const dot = document.createElement("div");
+        dot.className = `indicator-dot ${index === currentIndex ? 'active' : ''}`;
+        dot.addEventListener("click", () => {
+          currentIndex = index;
+          renderCarousel();
+        });
+        carouselIndicators.appendChild(dot);
+      });
+    }
+
+    // グリッド描画
+    function renderGrid() {
+      gridDndTrack.innerHTML = "";
+      const isFiltered = (selectedTag !== "ALL") || (searchQuery.trim() !== "");
+
+      filteredSites.forEach((site, index) => {
+        const card = document.createElement("div");
+        card.className = "card";
+        card.dataset.id = site.id;
+        card.dataset.index = index;
+        
+        if (!isFiltered) {
+          card.draggable = true;
+          setupDragAndDrop(card);
+        }
+
+        let previewHtml = site.image 
+          ? `<img src="${site.image}" alt="${escapeHtml(site.name)}" loading="lazy">` 
+          : `<div class="placeholder-art" style="font-size:2.5rem;">${escapeHtml(site.name ? site.name.trim().charAt(0) : "W")}</div>`;
+
+        const tagsHtml = (site.tags || []).map(t => `<span class="badge">${escapeHtml(t)}</span>`).join("");
+
+        card.innerHTML = `
+          <div class="card-preview" style="height: 160px;">
+            <span class="order-tag">#${site.order + 1}</span>
+            ${!isFiltered ? '<span class="drag-handle" title="ドラッグして並び替え">⋮⋮</span>' : ''}
+            ${previewHtml}
+          </div>
+          <div class="card-content">
+            <div>
+              <div class="card-title" title="${escapeHtml(site.name)}">${escapeHtml(site.name)}</div>
+              <p class="card-description">${escapeHtml(site.desc || "説明はありません。")}</p>
+              <div class="card-tags">${tagsHtml}</div>
+            </div>
+            <div class="card-actions">
+              <span class="url-hint" title="${escapeHtml(site.url)}">${escapeHtml(site.url)}</span>
+              <div class="btn-icon-group" onclick="event.stopPropagation()">
+                <button class="btn-icon" onclick="startEditSite('${site.id}')" title="編集">&#9998;</button>
+                <button class="btn-icon danger" onclick="deleteSite('${site.id}')" title="削除">&#128465;</button>
+              </div>
+            </div>
+          </div>
+        `;
+
+        card.addEventListener("click", () => {
+          window.open(site.url, "_blank", "noopener,noreferrer");
+        });
+
+        gridDndTrack.appendChild(card);
+      });
+    }
+
+    // ドラッグ＆ドロップ
+    function setupDragAndDrop(card) {
+      card.addEventListener("dragstart", (e) => {
+        draggedIndex = parseInt(card.dataset.index, 10);
+        card.classList.add("dragging");
+        e.dataTransfer.effectAllowed = "move";
+        e.dataTransfer.setData("text/plain", draggedIndex);
+      });
+
+      card.addEventListener("dragover", (e) => {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = "move";
+        card.classList.add("drag-over");
+      });
+
+      card.addEventListener("dragleave", () => {
+        card.classList.remove("drag-over");
+      });
+
+      card.addEventListener("dragend", () => {
+        card.classList.remove("dragging");
+        document.querySelectorAll(".card").forEach(c => c.classList.remove("drag-over"));
+        draggedIndex = null;
+      });
+
+      card.addEventListener("drop", async (e) => {
+        e.preventDefault();
+        card.classList.remove("drag-over");
+        const targetIndex = parseInt(card.dataset.index, 10);
+
+        if (draggedIndex === null || draggedIndex === targetIndex) return;
+
+        const [movedItem] = sites.splice(draggedIndex, 1);
+        sites.splice(targetIndex, 0, movedItem);
+
+        sites.forEach((item, idx) => {
+          item.order = idx;
+        });
+
+        await dbService.bulkPut(sites);
+        applyFilters();
+      });
+    }
+
+    window.moveSiteOrder = async function(currentOrder, delta) {
+      const targetOrder = currentOrder + delta;
+      if (targetOrder < 0 || targetOrder >= sites.length) return;
+
+      const itemA = sites.find(s => s.order === currentOrder);
+      const itemB = sites.find(s => s.order === targetOrder);
+      if (!itemA || !itemB) return;
+
+      itemA.order = targetOrder;
+      itemB.order = currentOrder;
+
+      sites.sort((a, b) => a.order - b.order);
+      await dbService.bulkPut([itemA, itemB]);
+      
+      currentIndex = targetOrder;
+      applyFilters();
+    };
+
+    // リアルタイムプレビュー
+    function updateLivePreview() {
+      const name = siteNameInput.value.trim() || "サイト名";
+      const desc = siteDescInput.value.trim() || "サイトの説明やメモがここに表示されます。";
+      const url = siteUrlInput.value.trim() || "https://example.com";
+      const tagsRaw = siteTagsInput.value.trim();
+      const img = siteImageInput.value.trim();
+
+      livePreviewTitle.textContent = name;
+      livePreviewDesc.textContent = desc;
+      livePreviewUrl.textContent = url;
+
+      if (tagsRaw) {
+        const tagList = tagsRaw.split(/[,、]/).map(t => t.trim()).filter(Boolean);
+        livePreviewTags.innerHTML = tagList.map(t => `<span class="badge">${escapeHtml(t)}</span>`).join("");
+      } else {
+        livePreviewTags.innerHTML = `<span class="badge">タグ未設定</span>`;
+      }
+
+      if (img) {
+        livePreviewImg.src = img;
+        livePreviewImg.style.display = "block";
+        livePlaceholderArt.style.display = "none";
+      } else {
+        livePreviewImg.src = "";
+        livePreviewImg.style.display = "none";
+        livePlaceholderArt.style.display = "flex";
+        livePlaceholderArt.textContent = name ? name.trim().charAt(0).toUpperCase() : "W";
+      }
+    }
+
+    // 編集モード開始
+    window.startEditSite = function(id) {
+      const site = sites.find(s => s.id === id);
+      if (!site) return;
+
+      previousView = currentView;
+
+      editIdInput.value = site.id;
+      siteNameInput.value = site.name;
+      siteUrlInput.value = site.url;
+      siteTagsInput.value = (site.tags || []).join(", ");
+      siteDescInput.value = site.desc || "";
+      siteImageInput.value = site.image || "";
+
+      formHeaderTitle.textContent = `サイト編集: ${site.name}`;
+      cancelEditBtn.style.display = "inline-flex";
+
+      updateLivePreview();
+      switchView("register", false);
+    };
+
+    function resetFormToNew() {
+      itemForm.reset();
+      editIdInput.value = "";
+      formHeaderTitle.textContent = "新規サイト登録";
+      cancelEditBtn.style.display = "none";
+      updateLivePreview();
+    }
+
+    function goBackToPreviousView() {
+      resetFormToNew();
+      switchView(previousView, false);
+    }
+
+    window.deleteSite = async function(id) {
+      const site = sites.find(s => s.id === id);
+      if (!site) return;
+      if (confirm(`「${site.name}」を削除しますか？`)) {
+        await dbService.delete(id);
+        sites = sites.filter(s => s.id !== id);
+        sites.forEach((item, idx) => {
+          item.order = idx;
+        });
+        await dbService.bulkPut(sites);
+        renderTagFilters();
+        applyFilters();
+      }
+    };
+
+    function prevSlide() {
+      if (filteredSites.length <= 1) return;
+      currentIndex = (currentIndex - 1 + filteredSites.length) % filteredSites.length;
+      renderCarousel();
+    }
+
+    function nextSlide() {
+      if (filteredSites.length <= 1) return;
+      currentIndex = (currentIndex + 1) % filteredSites.length;
+      renderCarousel();
+    }
+
+    function setupEventListeners() {
+      brandLogo.addEventListener("click", () => switchView("carousel"));
+
+      viewCarouselBtn.addEventListener("click", () => switchView("carousel"));
+      viewGridBtn.addEventListener("click", () => switchView("grid"));
+      viewRegisterBtn.addEventListener("click", () => {
+        resetFormToNew();
+        switchView("register");
+      });
+      cancelEditBtn.addEventListener("click", resetFormToNew);
+
+      headerBackBtn.addEventListener("click", goBackToPreviousView);
+      bottomBackBtn.addEventListener("click", goBackToPreviousView);
+
+      prevBtn.addEventListener("click", prevSlide);
+      nextBtn.addEventListener("click", nextSlide);
+
+      window.addEventListener("keydown", (e) => {
+        if (currentView === "register") {
+          if (e.key === "Escape") {
+            goBackToPreviousView();
+          }
+          return;
+        }
+
+        if (currentView === "carousel") {
+          if (document.activeElement === searchInput) {
+            if (e.key === "Escape") {
+              searchInput.value = "";
+              searchQuery = "";
+              applyFilters();
+              searchInput.blur();
+            }
+            return;
+          }
+          if (e.key === "ArrowLeft") prevSlide();
+          else if (e.key === "ArrowRight") nextSlide();
+          else if (e.key === "Enter" && filteredSites.length > 0) {
+            const current = filteredSites[currentIndex];
+            if (current) window.open(current.url, "_blank", "noopener,noreferrer");
+          }
+        }
+      });
+
+      searchInput.addEventListener("input", (e) => {
+        searchQuery = e.target.value;
+        applyFilters();
+      });
+
+      tagFilterBar.addEventListener("click", (e) => {
+        const chip = e.target.closest(".tag-chip");
+        if (!chip) return;
+        selectedTag = chip.dataset.tag;
+        renderTagFilters();
+        applyFilters();
+      });
+
+      [siteNameInput, siteUrlInput, siteTagsInput, siteDescInput, siteImageInput].forEach(elem => {
+        elem.addEventListener("input", updateLivePreview);
+      });
+
+      imageFileInput.addEventListener("change", (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          siteImageInput.value = event.target.result;
+          updateLivePreview();
+        };
+        reader.readAsDataURL(file);
+      });
+
+      clearImgBtn.addEventListener("click", () => {
+        siteImageInput.value = "";
+        imageFileInput.value = "";
+        updateLivePreview();
+      });
+
+      itemForm.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const editId = editIdInput.value;
+        const name = siteNameInput.value.trim();
+        const url = siteUrlInput.value.trim();
+        const tagsRaw = siteTagsInput.value;
+        const desc = siteDescInput.value.trim();
+        const image = siteImageInput.value.trim();
+
+        const tags = tagsRaw
+          .split(/[,、]/)
+          .map(t => t.trim())
+          .filter(t => t.length > 0);
+
+        if (editId) {
+          const target = sites.find(s => s.id === editId);
+          if (target) {
+            target.name = name;
+            target.url = url;
+            target.tags = tags;
+            target.desc = desc;
+            target.image = image;
+            await dbService.put(target);
+          }
+        } else {
+          sites.forEach(s => s.order += 1);
+          const newItem = {
+            id: "site-" + Date.now(),
+            name,
+            url,
+            tags,
+            desc,
+            image,
+            order: 0,
+            createdAt: Date.now()
+          };
+          sites.unshift(newItem);
+          await dbService.bulkPut(sites);
+          currentIndex = 0;
+        }
+
+        renderTagFilters();
+        applyFilters();
+        const returnView = previousView;
+        resetFormToNew();
+        switchView(returnView, false);
+      });
+
+      exportBtn.addEventListener("click", async () => {
+        const allData = await dbService.getAll();
+        allData.sort((a, b) => (a.order || 0) - (b.order || 0));
+        const blob = new Blob([JSON.stringify(allData, null, 2)], { type: "application/json" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `launcher_backup_${new Date().toISOString().slice(0, 10)}.json`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
+      });
+
+      importBtn.addEventListener("click", () => importFileInput.click());
+
+      importFileInput.addEventListener("change", (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = async (event) => {
+          try {
+            const imported = JSON.parse(event.target.result);
+            if (Array.isArray(imported)) {
+              imported.forEach((item, idx) => {
+                if (typeof item.order !== "number") item.order = idx;
+              });
+              imported.sort((a, b) => a.order - b.order);
+
+              await dbService.clear();
+              await dbService.bulkPut(imported);
+              sites = imported;
+              renderTagFilters();
+              applyFilters();
+              alert("IndexedDBにデータを正常に復元しました。");
+            } else {
+              alert("無効なJSONフォーマットです。");
+            }
+          } catch (err) {
+            alert("復元に失敗しました。");
+          }
+          importFileInput.value = "";
+        };
+        reader.readAsText(file);
+      });
+    }
+
+    init();
+  </script>
+</body>
+</html>
